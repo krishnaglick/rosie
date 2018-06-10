@@ -252,7 +252,10 @@ Factory.prototype = {
    */
   _alwaysCallBuilder: function(attr) {
     const attrMeta = this._attrs[attr];
-    return attrMeta.dependencies.indexOf(attr) >= 0;
+    if(attrMeta && attrMeta.dependencies) {
+      return attrMeta.dependencies.indexOf(attr) >= 0;
+    }
+    return null;
   },
 
   /**
@@ -306,6 +309,9 @@ Factory.prototype = {
    * @return {*}
    */
   _buildWithDependencies: function(meta, getDep) {
+    if (!meta || !meta.dependencies) {
+      return null;
+    }
     const deps = meta.dependencies;
     const self = this;
     const args = deps.map(function() {
@@ -323,7 +329,7 @@ Factory.prototype = {
    * @return {*}
    */
   build: async function(attributes, options) {
-    const result = this.attributes(attributes, options);
+    const result = await this.attributes(attributes, options);
     let retval = null;
 
     if (this.construct) {
