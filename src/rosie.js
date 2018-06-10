@@ -6,7 +6,7 @@
  * @param {Function=} constructor
  * @class
  */
-var Factory = function(constructor) {
+const Factory = function(constructor) {
   this.construct = constructor;
   this._attrs = {};
   this.opts = {};
@@ -55,19 +55,18 @@ Factory.prototype = {
    * @return {Factory}
    */
   attr: function(attr, dependencies, value) {
-    var builder;
     if (arguments.length === 2) {
       value = dependencies;
       dependencies = null;
     }
 
-    builder =
-      typeof value === 'function'
+    const builder =
+      typeof value === "function"
         ? value
         : function() {
-            return value;
-          };
-    this._attrs[attr] = { dependencies: dependencies || [], builder: builder };
+          return value;
+        };
+    this._attrs[attr] = { dependencies: dependencies || [], builder, };
     return this;
   },
 
@@ -87,7 +86,7 @@ Factory.prototype = {
    * @return {Factory}
    */
   attrs: function(attributes) {
-    for (var attr in attributes) {
+    for (const attr in attributes) {
       if (Factory.util.hasOwnProp(attributes, attr)) {
         this.attr(attr, attributes[attr]);
       }
@@ -124,20 +123,20 @@ Factory.prototype = {
    * @return {Factory}
    */
   option: function(opt, dependencies, value) {
-    var builder;
+    let builder;
     if (arguments.length === 2) {
       value = dependencies;
       dependencies = null;
     }
     if (arguments.length > 1) {
       builder =
-        typeof value === 'function'
+        typeof value === "function"
           ? value
           : function() {
-              return value;
-            };
+            return value;
+          };
     }
-    this.opts[opt] = { dependencies: dependencies || [], builder: builder };
+    this.opts[opt] = { dependencies: dependencies || [], builder: builder, };
     return this;
   },
 
@@ -159,7 +158,7 @@ Factory.prototype = {
    * @return {Factory}
    */
   sequence: function(attr, dependencies, builder) {
-    var factory = this;
+    const factory = this;
 
     if (arguments.length === 2) {
       builder = /** @type function(number): * */ dependencies;
@@ -171,7 +170,7 @@ Factory.prototype = {
         return i;
       };
     return this.attr(attr, dependencies, function() {
-      var args = [].slice.call(arguments);
+      const args = [].slice.call(arguments);
 
       factory.sequences[attr] = factory.sequences[attr] || 0;
       args.unshift(++factory.sequences[attr]);
@@ -204,8 +203,8 @@ Factory.prototype = {
   attributes: function(attributes, options) {
     attributes = Factory.util.extend({}, attributes);
     options = this.options(options);
-    for (var attr in this._attrs) {
-      this._attrValue(attr, attributes, options, [attr]);
+    for (const attr in this._attrs) {
+      this._attrValue(attr, attributes, options, [attr,]);
     }
     return attributes;
   },
@@ -229,17 +228,17 @@ Factory.prototype = {
       return attributes[attr];
     }
 
-    var value = this._buildWithDependencies(this._attrs[attr], function(dep) {
+    const value = this._buildWithDependencies(this._attrs[attr], function(dep) {
       if (Factory.util.hasOwnProp(options, dep)) {
         return options[dep];
       } else if (dep === attr) {
         return attributes[dep];
       } else if (stack.indexOf(dep) >= 0) {
         throw new Error(
-          'detected a dependency cycle: ' + stack.concat([dep]).join(' -> ')
+          "detected a dependency cycle: " + stack.concat([dep,]).join(" -> ")
         );
       } else {
-        return this._attrValue(dep, attributes, options, stack.concat([dep]));
+        return this._attrValue(dep, attributes, options, stack.concat([dep,]));
       }
     });
     attributes[attr] = value;
@@ -255,7 +254,7 @@ Factory.prototype = {
    * @return {boolean}
    */
   _alwaysCallBuilder: function(attr) {
-    var attrMeta = this._attrs[attr];
+    const attrMeta = this._attrs[attr];
     return attrMeta.dependencies.indexOf(attr) >= 0;
   },
 
@@ -268,7 +267,7 @@ Factory.prototype = {
    */
   options: function(options) {
     options = Factory.util.extend({}, options || {});
-    for (var opt in this.opts) {
+    for (const opt in this.opts) {
       options[opt] = this._optionValue(opt, options);
     }
     return options;
@@ -288,10 +287,10 @@ Factory.prototype = {
       return options[opt];
     }
 
-    var optMeta = this.opts[opt];
+    const optMeta = this.opts[opt];
     if (!optMeta.builder) {
       throw new Error(
-        'option `' + opt + '` has no default value and none was provided'
+        "option `" + opt + "` has no default value and none was provided"
       );
     }
 
@@ -310,9 +309,9 @@ Factory.prototype = {
    * @return {*}
    */
   _buildWithDependencies: function(meta, getDep) {
-    var deps = meta.dependencies;
-    var self = this;
-    var args = deps.map(function() {
+    const deps = meta.dependencies;
+    const self = this;
+    const args = deps.map(function() {
       return getDep.apply(self, arguments);
     });
     return meta.builder.apply(this, args);
@@ -326,28 +325,28 @@ Factory.prototype = {
    * @param {object=} options
    * @return {*}
    */
-  build: function(attributes, options) {
-    var result = this.attributes(attributes, options);
-    var retval = null;
+  build: async function(attributes, options) {
+    const result = this.attributes(attributes, options);
+    let retval = null;
 
     if (this.construct) {
-      var Constructor = this.construct;
+      const Constructor = this.construct;
       retval = new Constructor(result);
     } else {
       retval = result;
     }
 
-    for (var i = 0; i < this.callbacks.length; i++) {
-      var callbackResult = this.callbacks[i](retval, this.options(options));
+    for (let i = 0; i < this.callbacks.length; i++) {
+      const callbackResult = await this.callbacks[i](retval, this.options(options));
       retval = callbackResult || retval;
     }
     return retval;
   },
 
-  buildList: function(size, attributes, options) {
-    var objs = [];
-    for (var i = 0; i < size; i++) {
-      objs.push(this.build(attributes, options));
+  buildList: async function(size, attributes, options) {
+    const objs = [];
+    for (let i = 0; i < size; i++) {
+      objs.push(await this.build(attributes, options));
     }
     return objs;
   },
@@ -361,7 +360,7 @@ Factory.prototype = {
    * @return {Factory}
    */
   extend: function(name) {
-    var factory = typeof name === 'string' ? Factory.factories[name] : name;
+    const factory = typeof name === "string" ? Factory.factories[name] : name;
     // Copy the parent's constructor
     if (this.construct === undefined) {
       this.construct = factory.construct;
@@ -371,14 +370,14 @@ Factory.prototype = {
     // Copy the parent's callbacks
     this.callbacks = factory.callbacks.slice();
     return this;
-  }
+  },
 };
 
 /**
  * @private
  */
 Factory.util = (function() {
-  var hasOwnProp = Object.prototype.hasOwnProperty;
+  const hasOwnProp = Object.prototype.hasOwnProperty;
 
   return {
     /**
@@ -403,14 +402,14 @@ Factory.util = (function() {
      */
     extend: function(dest, source) {
       if (source) {
-        for (var key in source) {
+        for (const key in source) {
           if (hasOwnProp.call(source, key)) {
             dest[key] = source[key];
           }
         }
       }
       return dest;
-    }
+    },
   };
 })();
 
@@ -425,7 +424,7 @@ Factory.factories = {};
  * @return {Factory}
  */
 Factory.define = function(name, constructor) {
-  var factory = new Factory(constructor);
+  const factory = new Factory(constructor);
   this.factories[name] = factory;
   return factory;
 };
@@ -440,7 +439,7 @@ Factory.define = function(name, constructor) {
  */
 Factory.build = function(name, attributes, options) {
   if (!this.factories[name]) {
-    throw new Error('The "' + name + '" factory is not defined.');
+    throw new Error("The \"" + name + "\" factory is not defined.");
   }
   return this.factories[name].build(attributes, options);
 };
@@ -455,8 +454,8 @@ Factory.build = function(name, attributes, options) {
  * @return {Array.<*>}
  */
 Factory.buildList = function(name, size, attributes, options) {
-  var objs = [];
-  for (var i = 0; i < size; i++) {
+  const objs = [];
+  for (let i = 0; i < size; i++) {
     objs.push(Factory.build(name, attributes, options));
   }
   return objs;
@@ -474,14 +473,14 @@ Factory.attributes = function(name, attributes, options) {
   return this.factories[name].attributes(attributes, options);
 };
 
-if (typeof exports === 'object' && typeof module !== 'undefined') {
+if (typeof exports === "object" && typeof module !== "undefined") {
   /* eslint-env commonjs */
   exports.Factory = Factory;
   /* eslint-env commonjs:false */
-} else if (typeof define === 'function' && define.amd) {
+} else if (typeof define === "function" && define.amd) {
   /* eslint-env amd */
   define([], function() {
-    return { Factory: Factory };
+    return { Factory: Factory, };
   });
   /* eslint-env amd:false */
 } else if (this) {
