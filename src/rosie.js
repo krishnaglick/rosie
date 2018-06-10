@@ -54,11 +54,8 @@ Factory.prototype = {
    * @param {*=} value
    * @return {Factory}
    */
-  attr: function(attr, dependencies, value) {
-    if (arguments.length === 2) {
-      value = dependencies;
-      dependencies = null;
-    }
+  attr: function(attr, dependencies = [], value) {
+    value = value || dependencies;
 
     const builder =
       typeof value === "function"
@@ -66,7 +63,7 @@ Factory.prototype = {
         : function() {
           return value;
         };
-    this._attrs[attr] = { dependencies: dependencies || [], builder, };
+    this._attrs[attr] = { dependencies, builder, };
     return this;
   },
 
