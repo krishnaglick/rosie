@@ -1,6 +1,6 @@
 {
-    "extends": "../../.eslintrc",
-    "env": {
-        "jest": true
-    }
+  "extends": "../../.eslintrc",
+  "env": {
+    "jest": true
+  }
 }

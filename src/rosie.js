@@ -63,7 +63,7 @@ Factory.prototype = {
         : function() {
           return value;
         };
-    this._attrs[attr] = { dependencies, builder, };
+    this._attrs[attr] = { dependencies, builder };
     return this;
   },
 
@@ -133,7 +133,7 @@ Factory.prototype = {
             return value;
           };
     }
-    this.opts[opt] = { dependencies: dependencies || [], builder: builder, };
+    this.opts[opt] = { dependencies: dependencies || [], builder: builder };
     return this;
   },
 
@@ -156,7 +156,7 @@ Factory.prototype = {
    */
   sequence: function(attr, dependencies = [], builder = i => i) {
     const factory = this;
-    if(typeof dependencies === "function") {
+    if (typeof dependencies === "function") {
       builder = dependencies;
     }
 
@@ -195,7 +195,7 @@ Factory.prototype = {
     attributes = Factory.util.extend({}, attributes);
     options = this.options(options);
     for (const attr in this._attrs) {
-      this._attrValue(attr, attributes, options, [attr,]);
+      this._attrValue(attr, attributes, options, [attr]);
     }
     return attributes;
   },
@@ -226,10 +226,10 @@ Factory.prototype = {
         return attributes[dep];
       } else if (stack.indexOf(dep) >= 0) {
         throw new Error(
-          "detected a dependency cycle: " + stack.concat([dep,]).join(" -> ")
+          "detected a dependency cycle: " + stack.concat([dep]).join(" -> ")
         );
       } else {
-        return this._attrValue(dep, attributes, options, stack.concat([dep,]));
+        return this._attrValue(dep, attributes, options, stack.concat([dep]));
       }
     });
     attributes[attr] = value;
@@ -246,7 +246,7 @@ Factory.prototype = {
    */
   _alwaysCallBuilder: function(attr) {
     const attrMeta = this._attrs[attr];
-    if(attrMeta && attrMeta.dependencies) {
+    if (attrMeta && attrMeta.dependencies) {
       return attrMeta.dependencies.indexOf(attr) >= 0;
     }
     return null;
@@ -303,7 +303,7 @@ Factory.prototype = {
    * @return {*}
    */
   _buildWithDependencies: function(meta, getDep) {
-    if (!meta || !meta.dependencies) {
+    if (!meta || !meta.dependencies || !Array.isArray(meta.dependencies)) {
       return null;
     }
     const deps = meta.dependencies;
@@ -334,7 +334,10 @@ Factory.prototype = {
     }
 
     for (let i = 0; i < this.callbacks.length; i++) {
-      const callbackResult = await this.callbacks[i](retval, this.options(options));
+      const callbackResult = await this.callbacks[i](
+        retval,
+        this.options(options)
+      );
       retval = callbackResult || retval;
     }
     return retval;
@@ -477,7 +480,7 @@ if (typeof exports === "object" && typeof module !== "undefined") {
 } else if (typeof define === "function" && define.amd) {
   /* eslint-env amd */
   define([], function() {
-    return { Factory: Factory, };
+    return { Factory: Factory };
   });
   /* eslint-env amd:false */
 } else if (this) {
