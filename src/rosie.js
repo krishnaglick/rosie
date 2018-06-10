@@ -154,18 +154,12 @@ Factory.prototype = {
    * @param {function(number): *=} builder
    * @return {Factory}
    */
-  sequence: function(attr, dependencies, builder) {
+  sequence: function(attr, dependencies = [], builder = i => i) {
     const factory = this;
-
-    if (arguments.length === 2) {
-      builder = /** @type function(number): * */ dependencies;
-      dependencies = null;
+    if(typeof dependencies === "function") {
+      builder = dependencies;
     }
-    builder =
-      builder ||
-      function(i) {
-        return i;
-      };
+
     return this.attr(attr, dependencies, function() {
       const args = [].slice.call(arguments);
 
